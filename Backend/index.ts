@@ -1,18 +1,23 @@
 import {prisma} from "./db.ts";
 import express from "express";
-import { SignupSchema, SigninSchema} from "./types.ts";
+import { SignupSchema, SigninSchema, uploadVideo} from "./types.ts";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
+import cookieParser from "cookie-parser"
 import { success } from "zod";
 import { error } from "node:console";
 import {S3Client , GetObjectCommand , PutObjectCommand, Bucket$ } from '@aws-sdk/client-s3';
 import {getSignedUrl} from '@aws-sdk/s3-request-presigner'
+import { authmiddleware } from "./authMiddleware.ts";
+import {type Request , type Response , type NextFunction} from 'express'
+import { Type } from "./generated/prisma/enums";
 
 
 const app = express();
 const PORT = process.env.PORT
 app.use(express.json());
+app.use(cookieParser());
   
 //Cors kya karta hai , ki like backend port 3001 par chal raha hai and frontend 3000 port par and when we make a request from frontend like using fetch or axios , toh wo bola jaayega ki port 3000 par port 5173 se request aayi hai . Now agar hum cors nahi lagate hai , toh koi bhi frontend hamare backend par request maar paayega aaram se but if we use cors then hum us time par bol rahe hote hai ki koi bhi frontend yaa port is backend par request nahi maar sakta hai sirf origin:"http://localhost:5173" ki hi request accept hogi , sirf wahi request maar sakta hai .
 //Cors ko three steps me use karte hai 
@@ -218,6 +223,7 @@ app.post("/signin" , async(req,res)=>{
   },AUTH_KEY)
  
   res.cookie("token",token,{
+    maxAge: 1 * 24 * 60 * 60 * 1000,//matlab 1 day rahegi in ms . 1 din baad it will expire
     httpOnly : true,
     secure:false //Since localhost is not https , hence we set its value as "false" , but in production its "true" as then we use https 
   })
@@ -238,12 +244,54 @@ app.post("/signin" , async(req,res)=>{
 })
 
 
+interface customRequest extends Request {
+  userId?: string;
+}
 
 
+//upload the video
+app.post("/uploadVideo",authmiddleware,async(req:customRequest,res)=>{
+  try{
+   const {success,data,error} = uploadVideo.safeParse(req.body);
+   if(!success){
+    return res.status(ExtraInfo.WRONGINPUT).json({
+    success:false,
+    message : "Your input is invalid,please try again",
+    error:error
+   })
+   }
 
+   if (!req.userId) {
+   return res.status(401).json({ message: "Unauthorized" });
+   }
+   // 💡 isko humne isliye likha kyuki humne userid ko ? lagakar iski type string ya undefined kar di thi but in prisma humne userId ki type sirf String rakhi hai , toh isiliye subse pehle hum check kar lete hai ki userId ki type undefined toh nahi hai if yes then do not proceed if No then proceed .
+   
+   const VideoInfo = await prisma.uploads.create({
+    data:{
+      vedioUrl:data.vedioUrl,
+      thumbnailUrl:data.thumbnailUrl,
+      description:data.description,
+      title:data.title,
+      type:data.type,
+      userId:req.userId
+    }
+   })
 
+   res.status(ExtraInfo.SUCCESS).json({
+    success:true,
+    message : "Video uploaded Successfully",
+    data : VideoInfo
+  })
+}catch(e){
+  console.error(e);
+  res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+    success:false,
+    message :"Upload failed",
+  })
+ }
 
-
+})
+//upload the video
 
 
 
@@ -253,7 +301,10 @@ app.get("/getAllVedios",async(req,res)=>{
   try{
     const allVedios = await prisma.uploads.findMany({ //.findMany kya karega ki uploads table ki sabhi entries ko le aayega if we did not give it anything like userId jiske basis par wo lekar aaye
     include : {userid : {select:{id:true, channelName:true , profilePicture:true }}}, //Yaha hum bol rahe hai ki "uploads" ki sabhi vedio toh laana hi but with that take the corresponding user info jitna manga hai like here we asked for id , channelName , profilePicture and also yeh kya karta hai ki internally db JOINS karta hai .
-    orderBy :{createdAt:"desc"} //it is user to sort the data we get on the basis of a condition like here the condition is createdAt:desc and desc means descending order
+    orderBy :{createdAt:"desc"}, //it is user to sort the data we get on the basis of a condition like here the condition is createdAt:desc and desc means descending order
+    where:{
+      type:Type.Public
+    }
   })
 
   res.status(ExtraInfo.SUCCESS).json({

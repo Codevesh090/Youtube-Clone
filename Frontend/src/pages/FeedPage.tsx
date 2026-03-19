@@ -4,8 +4,6 @@ import {useEffect , useState} from 'react'
 import axios from "axios"
 
 
-
-
 interface UserDetails{
   id:string
   channelName:string

@@ -13,3 +13,11 @@ export const SigninSchema = z.object({
   email:z.email(),
   password:z.string()
 })
+
+export const uploadVideo = z.object({
+  vedioUrl:z.string(),
+  thumbnailUrl:z.string(),
+  description:z.string(),
+  title:z.string(),
+  type:z.enum(["Public","Private","Unlisted"])
+})
