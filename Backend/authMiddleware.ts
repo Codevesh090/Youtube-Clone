@@ -25,7 +25,7 @@ try{
   //we need to put a check here , kyuki agar token undefined hua toh app will crash, So to prevent that we need a check here .
   if (!token) {
   return res.status(401).json({
-    message: "No token provided"
+    message: "You are not logged in , Please log in to create channel"
   });
   }
   const {userId} = jwt.verify(token,process.env.SECRET_KEY as string)as TokenPayload;

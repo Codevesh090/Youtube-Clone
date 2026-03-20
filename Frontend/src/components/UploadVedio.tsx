@@ -22,6 +22,8 @@ const UploadVedio = ({setshowUploadVedio}:Props) => {
    const [dataUploadPercent, setdataUploadPercent] = useState(0)
    const [showloader, setshowloader] = useState(false);
    const [warning, setwarning] = useState(false);
+   const [isSuccess, setisSuccess] = useState(false);
+   const [dbError, setdbError] = useState("");
 
    
    const videoInputRef = useRef<HTMLInputElement>(null)
@@ -55,6 +57,7 @@ const UploadVedio = ({setshowUploadVedio}:Props) => {
     );
 
     const { putUrl: videoPutUrl, finalVedioUrl } = preSignedResponse.data;
+    //yaha jo humne putUrl:videoPutUrl likha hai iska matlab hai , ki hum renaming kar rahe hai putUrl ki , yaani waha se putUrl hi aaya response me but we renamed it to videoPutUrl
 
     //uploaded the video on R2
      await axios.put(videoPutUrl, video, {
@@ -123,24 +126,33 @@ const UploadVedio = ({setshowUploadVedio}:Props) => {
          setType("");
          settitle("");
       }
-
+    setisSuccess(true);
      } catch (error) {
        if (axios.isAxiosError(error)) {
          const errorMessage = error.response?.data?.message;
-         console.log(errorMessage);
+         setshowloader(false);
+         setdbError(errorMessage);
+         setTimeout(() => {
+          setshowUploadVedio(false);
+         }, 2000);
        } else {
-         console.log("Unexpected error occurred");
+         setdbError("Unexpected error occurred");
+         setTimeout(() => {
+          setshowUploadVedio(false);
+         }, 2000);
        }
      }
 
     }
+  //------------------------- handler
+
 
 
    const totalProgress = vedioUploadPercent * 0.3 + imageUploadPercent * 0.3 + dataUploadPercent * 0.4//yaha 0.5 se multiply ka matlab hai ki pure progress bar ka 50% is equivalent to 100% of the vedio and left 50% s equivalent to 50% of thumbnail upload .
-   if(totalProgress>=100){
+   if(isSuccess){
    setTimeout(() => {
-    alert("Video and Thumbnail Uploaded successfully ")
-    setshowUploadVedio(false)
+   alert("Video and Thumbnail Uploaded successfully ")
+   setshowUploadVedio(false)
    },500);
    }
 
@@ -170,7 +182,7 @@ const UploadVedio = ({setshowUploadVedio}:Props) => {
   return (
     <div>
     <div className='top-0 right-0 z-100 bg-black/30 w-full h-210 fixed'></div>
-    <div className='top-16 rounded-lg right-70 z-200 bg-[#0F0F0F] w-220 h-170 fixed'>
+    <div className='top-16 rounded-lg right-70 z-200 bg-[#0F0F0F] w-220 h-180 fixed'>
       <form  onSubmit={handleUpload} className='flex flex-col justify-center items-center gap-4 pt-7'>
         
         <div className='flex gap-10 items-center'>
@@ -217,8 +229,12 @@ const UploadVedio = ({setshowUploadVedio}:Props) => {
         {/*Loader*/}
          
          {/*Warning*/}
-         {warning ? (<div className='text-red-600 font-medium'>Please fill all the required fields</div>):("")}
+         {warning && <div className='text-red-600 font-medium'>Please fill all the required fields</div>}
          {/*Warning*/}
+
+         {/*dbError*/}
+         {dbError && (<div className="mt-3  flex items-start gap-2 px-4 py-2 rounded-lg bg-red-50 border border-red-200 text-red-700 text-sm shadow-sm"><span className="font-semibold">Error:</span><span>{dbError}</span></div>)}
+         {/*dbError*/}
 
         <motion.button type='submit' whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} transition={{type: "spring",stiffness: 300,damping: 20}} className='w-35 h-12 bg-white text-black font-medium text-lg rounded-2xl'>Upload Video</motion.button>
       </form>

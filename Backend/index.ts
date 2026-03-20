@@ -1,6 +1,6 @@
 import {prisma} from "./db.ts";
 import express from "express";
-import { SignupSchema, SigninSchema, uploadVideo} from "./types.ts";
+import { SignupSchema, SigninSchema, uploadVideo, createChannel} from "./types.ts";
 import bcrypt from "bcrypt";
 import jwt from 'jsonwebtoken';
 import cors from 'cors'
@@ -12,6 +12,7 @@ import {getSignedUrl} from '@aws-sdk/s3-request-presigner'
 import { authmiddleware } from "./authMiddleware.ts";
 import {type Request , type Response , type NextFunction} from 'express'
 import { Type } from "./generated/prisma/enums";
+import axios from "axios";
 
 
 const app = express();
@@ -39,7 +40,8 @@ enum ExtraInfo {
   USERDOESNOTEXISTS = 404,
   SUCCESS = 200,
   SERVERSIDEPROBLEM = 500,
-  USERALREADYEXIST = 409
+  USERALREADYEXIST = 409,
+  UNAUTHORIZED = 401
 }
 
 
@@ -125,6 +127,69 @@ app.post("/getThumbnailPresignedUrl",async(req,res)=>{
 
 })
 
+
+
+//get the permission of the backend for channel banner upload
+app.post("/getBannerPresignedUrl",async(req,res)=>{
+ try{
+  const {fileType} = req.body;
+  const extension = fileType.split("/")[1];
+  const bannerPath = `videos/devesh/ChannelBanners/${Date.now()}-${Math.random()}.${extension}`
+  
+  const putUrl = await getSignedUrl(
+    S3,
+    new PutObjectCommand({
+      Bucket:"youtube-100xdevs",
+      Key:bannerPath,
+      ContentType:fileType
+    }),
+    {expiresIn:60*5}
+  )
+
+  const finalUrl = "https://pub-9ed79a211b484b3f819c6f0883e7ac3e.r2.dev/"+bannerPath;
+
+  res.status(ExtraInfo.SUCCESS).json({
+    putUrl,
+    finalUrl
+  })
+}catch(e){
+ res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+   message:"Failed to generate Banner Presigned Url"
+ })
+}
+})
+
+
+
+// get the permission from the backend to upload Channel Icon on cloud or R2 bucket
+app.post("/getchannelIconPresignedUrl",async(req,res)=>{
+ try{
+  const {fileType} = req.body;
+  const extension = fileType.split("/")[1];
+  const channelIconPath = `videos/devesh/ChannelIcons/${Date.now()}-${Math.random()}.${extension}` 
+
+  const putUrl = await getSignedUrl(
+    S3,
+    new PutObjectCommand ({
+      Bucket:"youtube-100xdevs",
+      Key:channelIconPath,
+      ContentType:fileType
+    }),
+    {expiresIn:60*5}
+  )
+
+  const channelIconfinalUrl = "https://pub-9ed79a211b484b3f819c6f0883e7ac3e.r2.dev/"+channelIconPath;
+
+  res.status(ExtraInfo.SUCCESS).json({
+    putUrl,
+    channelIconfinalUrl
+  })
+ }catch(e){
+  res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+    message:"Failed to generate Channel Icon Presigned Url"
+  })
+ }
+})
 
 
 
@@ -262,7 +327,7 @@ app.post("/uploadVideo",authmiddleware,async(req:customRequest,res)=>{
    }
 
    if (!req.userId) {
-   return res.status(401).json({ message: "Unauthorized" });
+   return res.status(ExtraInfo.UNAUTHORIZED).json({ message: "Unauthorized" });
    }
    // 💡 isko humne isliye likha kyuki humne userid ko ? lagakar iski type string ya undefined kar di thi but in prisma humne userId ki type sirf String rakhi hai , toh isiliye subse pehle hum check kar lete hai ki userId ki type undefined toh nahi hai if yes then do not proceed if No then proceed .
    
@@ -294,6 +359,69 @@ app.post("/uploadVideo",authmiddleware,async(req:customRequest,res)=>{
 //upload the video
 
 
+//create your channel and putting the channel details on db 
+
+app.post("/createChannel",authmiddleware,async(req:customRequest,res)=>{
+ try{
+ const {success,data,error} = createChannel.safeParse(req.body);
+ if(!success){
+  return res.status(ExtraInfo.WRONGINPUT).json({
+    success:false,
+    message:"Your input is invalid , please try again",
+    error:error
+  })
+ }
+ 
+ if(!req.userId){
+  return res.status(ExtraInfo.UNAUTHORIZED).json({message:"Unauthorized"})
+ }
+
+ //agar jo hume userId mil rahi hai usse user hi exist nahi kar raha hai ,Tab toh process will crash , So,we applied a check which check does a user exist with this user Id and then only we moved on to other step
+ const existingUser = await prisma.users.findUnique({
+  where: { id: req.userId }
+ });
+
+if (!existingUser) {
+  return res.status(ExtraInfo.USERDOESNOTEXISTS).json({
+    success: false,
+    message: "User not found"
+  });
+}
+
+//humne ek aur check lagaya hai , ki check kar lo kahi is user ka channel name already exist toh nahi karta hai , If there is some value in channel name then user ko new cahnnel mat banane do as each user has only one channel allowed .
+if (existingUser.channelName) {
+  return res.status(400).json({
+    success: false,
+    message: "Channel already exists,You cannot create one more"
+  });
+}
+
+
+ const channelInfo = await prisma.users.update({
+  where:{id:req.userId},
+  data:{
+    channel:data.channel,
+    channelName:data.channelName,
+    description:data.description,
+    bannerUrl:data.bannerUrl,
+    profilePicture:data.profilePicture
+  }
+ })
+
+ res.status(ExtraInfo.SUCCESS).json({
+  success:true,
+  message:"Channel Created Successfully",
+  data:channelInfo
+ })
+}catch(e){
+console.error(e);
+  res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+    success:false,
+    message :"Channel creation failed",
+  })
+}
+
+})
 
 
 //get all vedios
@@ -326,3 +454,10 @@ app.get("/getAllVedios",async(req,res)=>{
 app.listen(PORT,()=>{
   console.log(`Server is running at ${PORT}`)
 })
+
+
+
+//Extra Info --
+ //	•	PUT = Put everything | Yanni yeh pure row ko replace kar dega toh purana data out and new In.
+ // •	PATCH = Patch (fix small part) | Yeh sirf jitna part update karne ko keh rahe hai utna hi karega.
+ //So because agar hume thoda sa hi update karna hai na ki puri ro replace , hence then we use patch.

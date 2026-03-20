@@ -1,3 +1,4 @@
+import { channel } from "node:diagnostics_channel"
 import z, { email } from "zod"
 
 export const SignupSchema = z.object({
@@ -20,4 +21,12 @@ export const uploadVideo = z.object({
   description:z.string(),
   title:z.string(),
   type:z.enum(["Public","Private","Unlisted"])
+})
+
+export const createChannel = z.object({
+  channel:z.boolean(),
+  channelName:z.string(),
+  bannerUrl:z.string(),
+  profilePicture:z.string(),
+  description:z.string()
 })

@@ -13,7 +13,7 @@ const Navbar = () => {
      
      <button disabled={showUploadVedio} className={`${showUploadVedio ? ("bg-gray-600"):("bg-green-500")} w-30 h-10 rounded-lg hover:bg-gray-700`} onClick={()=>{setshowUploadVedio(true)}} >Upload Video</button> 
 
-     <Link to={"/signin"}> <button className='bg-white w-20 h-10 rounded-lg hover:bg-gray-300'>← Log out</button></Link>
+     <Link to={"/signin"}> <button className='bg-white w-20 h-10 rounded-lg hover:bg-gray-300'>← Log In</button></Link>
      
      {buttonState ? (<ChannelButton setbuttonState = {setbuttonState} />):(<YourVideoButton />) }
      
