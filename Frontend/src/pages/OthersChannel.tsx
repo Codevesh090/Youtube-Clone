@@ -9,6 +9,7 @@ import {useNavigate} from 'react-router-dom'
 import UploadVedio from '../components/UploadVedio';
 import {motion} from 'motion/react';
 import axios from "axios";
+import { useParams } from "react-router-dom";
 
 interface itemData {
   uploadId:string,
@@ -18,7 +19,7 @@ interface itemData {
   createdAt: Date
 }
 
-const YourChannel = () => {
+const OthersChannel = () => {
     const [showUploadVedio, setshowUploadVedio] = useState(false);
     const [channelName, setchannelName] = useState("");
     const [bannerUrl, setbannerUrl] = useState("");
@@ -29,24 +30,25 @@ const YourChannel = () => {
     const [loading, setloading] = useState(false);
     const [error, seterror] = useState("");
     
+  const {userId} = useParams(); //App.tsx me <Route path="/othersChannel/:userid" element={<OthersChannel />} /> jo bhi variable in params likha hoga same naam likhna when deconstructing here . like userid in App.tsx and userid in useParams is same .
+
   useEffect(() => {
   
   
-  const fetchChannelInfo = async () => {
+  const fetchothersChannelInfo = async () => {
     try {
       setloading(true);
       const response = await axios.get(
-        "http://localhost:3000/getChannelInfo",
-        { withCredentials: true }
+        `http://localhost:3000/getothersChannelInfo/${userId}`
       );
 
-      const channelInfo = response.data.channelInfo;
+      const otherschannelInfo = response.data.othersChannelInfo;
 
-      setchannelName(channelInfo.channelName);
-      setbannerUrl(channelInfo.bannerUrl);
-      setprofilePicture(channelInfo.profilePicture);
-      setdescription(channelInfo.description);
-      setsubscriberCount(channelInfo.subscriberCount);
+      setchannelName(otherschannelInfo.channelName);
+      setbannerUrl(otherschannelInfo.bannerUrl);
+      setprofilePicture(otherschannelInfo.profilePicture);
+      setdescription(otherschannelInfo.description);
+      setsubscriberCount(otherschannelInfo.subscriberCount);
 
     } catch (error: unknown) {
       if (axios.isAxiosError(error)) {
@@ -58,11 +60,11 @@ const YourChannel = () => {
   };
   
 
-  const fetchVideo = async()=>{
+  const fetchothersChannelVideos = async()=>{
    try{
-    const response = await axios.get("http://localhost:3000/getChannelInfo",{withCredentials:true});
-    const videoInfo = response.data.channelInfo.uploads; //tHIS is a array which contain video details [{Video details},{Video details},{Video details},{Video details}]
-    setvideoInfo(videoInfo);
+    const response = await axios.get(`http://localhost:3000/getothersChannelVideos/${userId}`);
+    const othersvideoInfo = response.data.othersChannelVideosInfo; //tHIS is a array which contain video details [{Video details},{Video details},{Video details},{Video details}]
+    setvideoInfo(othersvideoInfo);
    }catch(error:unknown){
     if(axios.isAxiosError(error)){
     seterror(error.response?.data.message)
@@ -75,9 +77,9 @@ const YourChannel = () => {
   }
 
 
-  fetchChannelInfo();
-  fetchVideo();
- }, []);
+  fetchothersChannelInfo();
+  fetchothersChannelVideos();
+ }, [userId]);
     
 
 const navigate = useNavigate();
@@ -296,7 +298,7 @@ function Timeago(CreatedAt:Date){
   )
 }
 
-export default YourChannel
+export default OthersChannel
 
 
 //clean up the mess and plan next
@@ -304,5 +306,47 @@ export default YourChannel
 //Important bug to solve ----
 //why if any error come then Yourchannel button gets disable why not it takes us to the yOUR CHANNEL Page and there on screen it shows the whatever the error came in .
 
+//More Efficient way to do this :
+{/* 
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      setloading(true);
+
+      const [infoRes, videoRes] = await Promise.all([
+        axios.get(`/getothersChannelInfo/${userId}`),
+        axios.get(`/getothersChannelVideos/${userId}`)
+      ]);
+
+      const info = infoRes.data.othersChannelInfo;
+      const videos = videoRes.data.othersChannelVideosInfo;
+
+      setchannelName(info.channelName);
+      setbannerUrl(info.bannerUrl);
+      setprofilePicture(info.profilePicture);
+      setdescription(info.description);
+      setsubscriberCount(info.subscriberCount);
+      setvideoInfo(videos);
+
+    } catch (err) {
+      seterror("Something went wrong");
+    } finally {
+      setloading(false);
+    }
+  };
+
+  fetchData();
+}, [userId]);
+
+*/}
+
+
+
+
+
+
 
 //jab yeh button(this button is present in feed video) click hoga toh yeh function trigger hoga and that will make request at backend with the userid , the backend will find it and give the response back we took that response in , fill it where it needs to construct a new page .
+
+
+

@@ -35,7 +35,7 @@ model Users {
   lastName String
   gender Gender
   dateOfBirth DateTime
-  channel Boolean?
+  channel Boolean? @default(false)
   channelName String?
   bannerUrl String?
   profilePicture String?

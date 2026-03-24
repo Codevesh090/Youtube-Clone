@@ -3,6 +3,7 @@ import FeedPage from "./pages/FeedPage";
 import Signup from "./pages/Signup";
 import SignIn from "./pages/Signin";
 import YourChannel from "./pages/YourChannel";
+import OthersChannel from "./pages/OthersChannel";
 
 const App = () => {
   return (
@@ -11,7 +12,8 @@ const App = () => {
       <Route path="/" element={<FeedPage />} />
       <Route path="/signup" element={<Signup />} />
       <Route path="/signin" element={<SignIn />} />
-      <Route path="/YourChannel" element={<YourChannel />} />
+      <Route path="/channel/:userid" element={<YourChannel />} />
+      <Route path="/othersChannel/:userId" element={<OthersChannel />} />
     </Routes>
     </div>
   )

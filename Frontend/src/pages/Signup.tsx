@@ -1,6 +1,8 @@
 import {useState} from 'react'
 import axios from "axios";
 import {useNavigate} from 'react-router-dom'
+import { IoEye } from "react-icons/io5";
+import { IoEyeOff } from "react-icons/io5";
 
 const Signup = () => {
   const [email, setemail] = useState("")
@@ -12,6 +14,7 @@ const Signup = () => {
   const [status, setstatus] = useState("")
   const [isSuccess, setisSuccess] = useState<boolean | null>(null)
   const [loading, setloading] = useState(false)
+  const [showPassword, setshowPassword] = useState(false);
   const navigate = useNavigate()
 
   async function handlerSubmit(e: React.SyntheticEvent<HTMLFormElement>) {
@@ -100,7 +103,10 @@ const Signup = () => {
       <form onSubmit={handlerSubmit} className='flex flex-col justify-center items-center gap-4'>
        <h1 className='font-bold text-white text-5xl'>Sign up</h1>
        <input type='email' placeholder='Email address' value={email} onChange={(e)=>setemail(e.target.value)} className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6'/>
-       <input type='password' placeholder='Password'  value={password} onChange={(e)=>setpassword(e.target.value)}  className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6' />
+       <div className='relative'>
+       <input type={showPassword ? ("text"):("password")} placeholder='Password'  value={password} onChange={(e)=>setpassword(e.target.value)}  className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6' />
+       {showPassword ? (<IoEyeOff className='text-white absolute z-20 bottom-3 left-70' onClick={()=>setshowPassword(false)}/>):(<IoEye className='text-white absolute z-20 bottom-3 left-70'onClick={()=>setshowPassword(true)}/>)}
+       </div>
        <input type='text' placeholder='Enter Your First Name' value={firstName} onChange={(e)=>setfirstName(e.target.value)} className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6' />
        <input type='text' placeholder='Enter Your Last Name' value={lastName} onChange={(e)=>setlastName(e.target.value)} className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6' />
        <div className="flex flex-col items-center gap-3 w-72 rounded-xl bg-white p-4 shadow-lg">
@@ -117,6 +123,7 @@ const Signup = () => {
         <input type='date' value={date} onChange={(e)=>setdate(e.target.value)} className='text-black border-2 border-red-600 rounded-lg px-4 py-2 focus:border-red-500 focus:ring-2 focus:ring-red-400 focus:outline-none transition' />
        </div>
        <button type='submit' disabled={loading} className='bg-red-600 text-white rounded-lg w-30 h-10 font-semibold flex items-center justify-center'>{loading ? (<div className='w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin'></div>) : ("Signup Now")}</button>
+       <h1 className='text-white'>Already have a account ? <span className='text-red-500 hover:text-red-900 cursor-pointer font-semibold' onClick={()=>navigate("/signin")}>Log in</span></h1>
        { status && (<h1 className= {`${isSuccess ? "text-green-500":"text-red-500"}`} >{status}</h1>)} 
       </form>
     </div>

@@ -360,7 +360,6 @@ app.post("/uploadVideo",authmiddleware,async(req:customRequest,res)=>{
 
 
 //create your channel and putting the channel details on db 
-
 app.post("/createChannel",authmiddleware,async(req:customRequest,res)=>{
  try{
  const {success,data,error} = createChannel.safeParse(req.body);
@@ -428,13 +427,16 @@ console.error(e);
 app.get("/getAllVedios",async(req,res)=>{
   try{
     const allVedios = await prisma.uploads.findMany({ //.findMany kya karega ki uploads table ki sabhi entries ko le aayega if we did not give it anything like userId jiske basis par wo lekar aaye
-    include : {userid : {select:{id:true, channelName:true , profilePicture:true }}}, //Yaha hum bol rahe hai ki "uploads" ki sabhi vedio toh laana hi but with that take the corresponding user info jitna manga hai like here we asked for id , channelName , profilePicture and also yeh kya karta hai ki internally db JOINS karta hai .
+    include : {userid : {select:{id:true, channelName:true , profilePicture:true , channel:true}}}, //Yaha hum bol rahe hai ki "uploads" ki sabhi vedio toh laana hi but with that take the corresponding user info jitna manga hai like here we asked for id , channelName , profilePicture and also yeh kya karta hai ki internally db JOINS karta hai .
     orderBy :{createdAt:"desc"}, //it is user to sort the data we get on the basis of a condition like here the condition is createdAt:desc and desc means descending order
     where:{
       type:Type.Public
     }
   })
 
+  //Question? -> maine toh nahi bataya ki users table se lao, phir kaise pata chala?
+  //Answer -> Prisma ko already pata hota hai ki uploads aur users ka relation kya hai — because tumne ye relation schema.prisma file me define kiya hota hai.
+  // include : {userid  -> yaha jo userid likha hai wo randomly kuch nahi hai , yeh wo naam hota hai jisse connection bana hai do tables ke beech like -> userid Users @relation(fields: [userId],references: [id]) userid ne uploads table se connection banaya hai .
   res.status(ExtraInfo.SUCCESS).json({
     success:true,
     data : allVedios
@@ -450,6 +452,113 @@ app.get("/getAllVedios",async(req,res)=>{
 })
 
 
+app.get("/getChannelStatus",authmiddleware,async(req:customRequest,res)=>{
+ try{const channelStatus = await prisma.users.findUnique({
+  where:{
+    id:req.userId
+  },
+  select:{
+    channel:true,
+  }
+ })
+
+ res.status(ExtraInfo.SUCCESS).json({
+  success:true,
+  channelStatus:channelStatus
+ })}
+ catch(e){
+  res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+    success:false,
+    message:"Something went wrong on server side"
+  })
+ }
+})
+
+app.get("/getchannelInfo",authmiddleware,async(req:customRequest,res)=>{
+  try{
+    const channelInfo = await prisma.users.findUnique({
+    where:{
+      id:req.userId
+    },
+    select:{
+      id:true,
+      channelName:true,
+      bannerUrl:true,
+      profilePicture:true,
+      description:true,
+      subscriberCount:true,
+      uploads:{
+       select: {
+         uploadId:true,
+         thumbnailUrl: true,
+         title: true,
+         views: true,
+         createdAt: true
+      }
+    }
+    }
+  })
+  res.status(ExtraInfo.SUCCESS).json({
+    success:true,
+    channelInfo:channelInfo
+  })}
+  catch(error:unknown){
+   res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+    success:false,
+    message:"Server Side error happended"
+   })
+  }
+})
+
+app.get("/getothersChannelInfo/:userId",async(req,res)=>{
+  try{ const userId = req.params.userId;
+   const othersChannelInfo = await prisma.users.findUnique({
+    where:{
+      id:userId
+    },select:{
+      id:true,
+      channelName:true,
+      bannerUrl:true,
+      profilePicture:true,
+      description:true,
+      subscriberCount:true,
+    }
+   })
+   res.status(ExtraInfo.SUCCESS).json({
+    success:true,
+    othersChannelInfo:othersChannelInfo
+   })}catch{
+    res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+      success:false,
+      message:"Server Side Error Occured"
+    })
+   }
+})
+
+app.get("/getOthersChannelVideos/:userId",async(req,res)=>{
+     try{const userId = req.params.userId;
+     const othersChannelVideosInfo = await prisma.uploads.findMany({
+      where:{
+        userId:userId
+      },select:{
+        uploadId:true,
+        thumbnailUrl: true,
+        title: true,
+        views: true,
+        createdAt: true
+      }
+     });
+     res.status(ExtraInfo.SUCCESS).json({
+      success:true,
+      othersChannelVideosInfo:othersChannelVideosInfo
+     })}catch{
+      res.status(ExtraInfo.SERVERSIDEPROBLEM).json({
+        success:false,
+        message:"Server side Error Occured"
+      })
+     }
+
+   })
 
 app.listen(PORT,()=>{
   console.log(`Server is running at ${PORT}`)
@@ -461,3 +570,4 @@ app.listen(PORT,()=>{
  //	•	PUT = Put everything | Yanni yeh pure row ko replace kar dega toh purana data out and new In.
  // •	PATCH = Patch (fix small part) | Yeh sirf jitna part update karne ko keh rahe hai utna hi karega.
  //So because agar hume thoda sa hi update karna hai na ki puri ro replace , hence then we use patch.
+

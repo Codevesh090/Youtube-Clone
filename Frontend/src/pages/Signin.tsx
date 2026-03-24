@@ -2,13 +2,16 @@ import { Link } from 'react-router-dom'
 import {useState} from 'react'
 import axios from 'axios'
 import {useNavigate} from "react-router-dom"
+import { IoEye } from "react-icons/io5";
+import { IoEyeOff } from "react-icons/io5";
 
 const SignIn = () => {
   const [email, setemail] = useState("")
   const [password, setpassword] = useState("")
   const [loading , setloading] = useState(false)
   const [status, setstatus] = useState("")
-  const [statusSuccess, setstatusSuccess] = useState(false)
+  const [statusSuccess, setstatusSuccess] = useState(false);
+  const [showPassword, setshowPassword] = useState(false);
   const navigate = useNavigate();
   
   async function handleSubmit(e:React.SyntheticEvent<HTMLFormElement>){
@@ -75,7 +78,10 @@ const SignIn = () => {
       <form onSubmit={handleSubmit} className='flex flex-col justify-center items-center gap-4'>
        <h1 className='font-bold text-white text-5xl'>Sign In</h1>
        <input type='email' placeholder='Email address' value={email} onChange={(e)=>{setemail(e.target.value)}} className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6'/>
-       <input type='password' placeholder='Password' value={password} onChange={(e)=>{setpassword(e.target.value)}} className='border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6' />
+       <div className='relative'>
+       <input type={showPassword ? ("text"):("password")} placeholder='Password' value={password} onChange={(e)=>{setpassword(e.target.value)}} className='z-10 border-2 border-red-600 text-red-500/80 font-semibold rounded-lg w-80 h-10 pl-6' />
+       {showPassword ? (<IoEyeOff className='text-white absolute z-20 bottom-3 left-70' onClick={()=>setshowPassword(false)}/>):(<IoEye className='text-white absolute z-20 bottom-3 left-70' onClick={()=>setshowPassword(true)}/>)}
+        </div>
        <h1 className="text-[16px] text-white">New to Youtube? <span className="font-semibold text-red-500 hover:cursor-pointer"><Link to={"/signup"}>Join Youtube</Link></span></h1>
        <button disabled={loading} className='bg-red-600 text-white rounded-lg w-30 h-10 font-semibold flex items-center justify-center' type='submit' >{loading ? (<div className='w-5 h-5 rounded-full border-2 border-white border-t-transparent animate-spin'></div>):("Log In")}</button>
        { status && (<h1 className={`${statusSuccess ? "text-green-500":"text-red-500" }`} >{status}</h1>)} 

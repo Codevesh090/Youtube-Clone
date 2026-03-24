@@ -27,6 +27,7 @@ const CreateChannel = ({setshowCreateChannel,setbuttonState}:Props) => {
   const [fillWarning, setfillWarning] = useState(false);
   const [dbError, setdbError] = useState("");
   const [isSuccess, setisSuccess] = useState(false);
+  const [goBack, setgoBack] = useState(true);
 
 
   function openBannerUpload(){
@@ -62,7 +63,8 @@ const CreateChannel = ({setshowCreateChannel,setbuttonState}:Props) => {
     setfillWarning(true);
     return;
   }
-
+  
+  setgoBack(false);
   setshowloader(true); 
   try{
     //banner uploaded on R2
@@ -83,9 +85,6 @@ const CreateChannel = ({setshowCreateChannel,setbuttonState}:Props) => {
     const bannerFinalUrl = finalUrl;
     console.log(bannerFinalUrl);
     //banner uploaded on R2
-
-
-
 
     //profile Icon uploaded on R2
     const preSignedProfileIconUrlResponse = await axios.post("http://localhost:3000/getchannelIconPresignedUrl",{fileType:profileIcon.type})
@@ -157,8 +156,9 @@ const CreateChannel = ({setshowCreateChannel,setbuttonState}:Props) => {
        setTimeout(() => {
          alert("Channel created successfully");
          setshowCreateChannel(false);
-         setbuttonState(false);
-       }, 5000);
+         setbuttonState(true);
+         setgoBack(true);
+       },100);
      }
    }, [isSuccess,setbuttonState,setshowCreateChannel]);
    //Humne yaha setbuttonState and setshowCreateChannel isliye daala , kyuki we used these in the useEffect function , Toh ESlint bolta hai ki agar hum useEffect ke andar kuch esa daalte hai jo bahar se aaya hai and changable hai , toh use bhi hume hamesha dependency me rakhna padta hai ,Matlab it just prewarn us ki tumne kuch states ka use kiya hai and kahi tum inhi states ko as dependency toh use nahi karne waala the if yes then tum bhul rahe ho ise dependency me daalo .
@@ -200,7 +200,7 @@ const CreateChannel = ({setshowCreateChannel,setbuttonState}:Props) => {
 
         <div className="flex gap-5 items-center">
         <motion.button type="submit" whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.95 }} transition={{type: "spring",stiffness: 300,damping: 20}} className='w-35 h-12 bg-white mt-2 text-black font-medium text-lg rounded-lg'>Create Channel</motion.button>
-        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} className="mt-2.5 px-4 py-1.5 bg-blue-600 text-white text-sm font-medium rounded-full hover:bg-blue-700 " onClick={()=>setshowCreateChannel(false)}>← Go back</motion.button>
+        <motion.button whileHover={{ scale: 1.1 }} whileTap={{ scale: 0.9 }} transition={{ type: "spring", stiffness: 300, damping: 20 }} className={`mt-2.5 px-4 py-1.5 ${goBack ? ("bg-blue-600"):("bg-gray-500")} text-white text-sm font-medium rounded-full`} disabled={!goBack} onClick={()=>setshowCreateChannel(false)}>← Go back</motion.button>
         </div>
 
       </form>
@@ -212,16 +212,16 @@ const CreateChannel = ({setshowCreateChannel,setbuttonState}:Props) => {
 export default CreateChannel
 
 
-          //After this when user signin it checks channel true or false , on the basis of that it will decide which button to show createCHANNEL or Your channel . //turn off the log in button and change the Create channel button to Your channel button .
-          //after this take the upload button from navbar of feed page to the channel page and make the go back button working .
-          //Put the logout and Your channel at ends .
           //Always pass the user id in the route when user opens a channel page because on basis of that route userId we take out the no. of uploads of video they made
           //channel page is universal anyone can open it and upload video is private . so make things according to that .
           //when we click on Your channel then what happens how that cahnnel page is opening and how the data is coming as we can apply same logic everywhere like when user click on user channel profile then cahnnel page opens but how ?
           //after this when we hover over a video thumbnail then video replay
-          //why to put upload video in Your channel , just keep at the feed page if not logged in user tries then show then to firstly log in and then access it .
           //two new things to learn pagination and infinite comments .
-
+          //change video if once uploaded.
+          //yeh page render ho raha hai and uspar sab likha hua hai .
+          //will take it from cookies the user id and on basis of that user id we take out the info and then we set those info as props and then those props be distributed and we see your channel page
+          //if only authentiacted one is allowed then how I just type the link and reach out there .
+          //password eye 
 
 
 //---------------------------------------------------------------------------------------------------------------
