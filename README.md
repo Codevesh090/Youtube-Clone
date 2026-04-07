@@ -139,11 +139,58 @@ This keeps the backend lightweight and avoids large file handling.
 
 ## 📁 Project Structure
 ```
-├── index.ts            # Main Express app & all route handlers
-├── db.ts               # Prisma client instance
-├── types.ts            # Zod validation schemas & types
-├── authMiddleware.ts   # JWT cookie-based auth middleware
-├── .env                # Environment variables (not committed)
-└── prisma/
-    └── schema.prisma   # Database schema
+Youtube-Project/
+├── Backend/
+│   ├── generated/
+│   ├── node_modules/
+│   ├── prisma/
+│   ├── .env
+│   ├── .gitignore
+│   ├── authMiddleware.ts
+│   ├── bun.lock
+│   ├── db.ts
+│   ├── index.ts
+│   ├── package-lock.json
+│   ├── package.json
+│   ├── prisma.config.ts
+│   ├── tsconfig.json
+│   └── types.ts
+│
+├── Frontend/
+│   ├── node_modules/
+│   ├── public/
+│   │   ├── 100xprofile.jpg
+│   │   ├── channelBanner.jpg
+│   │   ├── ChannelPage.png
+│   │   ├── HomePage.png
+│   │   ├── Img.jpeg
+│   │   ├── Signup-Page.png
+│   │   ├── UploadVideo.png
+│   │   └── Youtube.svg
+│   ├── src/
+│   │   ├── assets/
+│   │   ├── components/
+│   │   │   ├── ChannelButton.tsx
+│   │   │   ├── CreateChannel.tsx
+│   │   │   ├── FeedVedio.tsx
+│   │   │   ├── Navbar.tsx
+│   │   │   ├── UploadVedio.tsx
+│   │   │   └── YourVideoButton.tsx
+│   │   ├── pages/
+│   │   │   ├── FeedPage.tsx
+│   │   │   ├── OthersChannel.tsx
+│   │   │   ├── Signin.tsx
+│   │   │   ├── Signup.tsx
+│   │   │   └── YourChannel.tsx
+│   │   ├── App.tsx
+│   │   ├── index.css
+│   │   └── main.tsx
+│   ├── .gitignore
+│   ├── bun.lock
+│   ├── eslint.config.js
+│   ├── index.html
+│   └── package.json
+│
+├── LeftOver.md
+└── README.md
 ```
