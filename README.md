@@ -10,7 +10,7 @@ Supports user auth, channel creation, cloud media uploads via
 
 | Home Page | Signup Page |
 |-----------|-------------|
-| ![Home](/HomPage.png) | ![Signup](Frontend/public/Signup-Page.png) |
+| ![Home](Frontend/public/HomPage.png) | ![Signup](Frontend/public/Signup-Page.png) |
 
 | Channel Page | Upload Video |
 |--------------|--------------|
